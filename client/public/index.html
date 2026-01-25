@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hiring Test Login</title>
+</head>
+<body>
+
+<h2>Enter Test PIN</h2>
+
+<input type="text" id="pin">
+<button onclick="login()">Validate PIN</button>
+<p id="msg" style="color:red;"></p>
+
+<script>
+function login(){
+  fetch("http://127.0.0.1:5000/validate-pin",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json"},
+    body:JSON.stringify({ pin: document.getElementById("pin").value })
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.success){
+
+      // 🔴 STORE ALL IMPORTANT DATA
+      localStorage.setItem("user_id", d.user_id);
+      localStorage.setItem("email", d.email);
+      localStorage.setItem("test_start", d.test_start); // ⭐ ADD THIS
+      localStorage.setItem("test_end", d.test_end);     // already ok
+      localStorage.setItem("pin_validated", "true");   // ⭐ ADD THIS
+
+      // Redirect to test page
+      window.location.href = "test.html";
+
+    }else{
+      document.getElementById("msg").innerText = d.message;
+    }
+  })
+  .catch(err=>{
+    document.getElementById("msg").innerText = "Server error. Try again.";
+  });
+}
+</script>
+
+</body>
+</html>

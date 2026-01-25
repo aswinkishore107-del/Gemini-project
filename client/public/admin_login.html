@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Login</title>
+</head>
+<body>
+
+<h2>Owner / Admin Login</h2>
+
+<input type="text" id="user" placeholder="Username"><br><br>
+<input type="password" id="pass" placeholder="Password"><br><br>
+
+<button onclick="login()">Login</button>
+<p id="msg"></p>
+
+<script>
+function login(){
+  fetch("http://127.0.0.1:5000/admin/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      username: document.getElementById("user").value,
+      password: document.getElementById("pass").value
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if(d.success){
+      localStorage.setItem("admin", "true");
+      window.location.href = "admin.html";
+    } else {
+      document.getElementById("msg").innerText = d.message;
+    }
+  });
+}
+</script>
+
+</body>
+</html>

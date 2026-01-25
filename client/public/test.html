@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hiring Assessment</title>
+  <style>
+    body{font-family:Arial;margin:0;background:#f4f6fb}
+    #timerBar{position:sticky;top:0;background:#1f2937;color:white;padding:12px 20px;font-size:18px;font-weight:bold;display:flex;justify-content:center;z-index:1000}
+    .container{max-width:900px;margin:30px auto;padding:20px}
+    .box{background:white;padding:20px;margin-bottom:30px;border-radius:8px}
+    textarea{width:100%;height:120px}
+    .result{background:#eef3ff;padding:10px;margin-top:10px;display:none;white-space:pre-wrap}
+    .status{margin-top:8px;font-weight:bold}
+    button{padding:8px 16px;margin-top:10px}
+    #finalBtn{padding:12px 30px;font-size:16px;background:#2563eb;color:white;border:none;border-radius:6px;cursor:pointer}
+    #finalBtn:disabled{background:#9ca3af;cursor:not-allowed}
+  </style>
+</head>
+<body>
+
+<div id="timerBar">Remaining Time: <span id="countdown">--:--</span></div>
+
+<div class="container">
+  <h2>Hiring Assessment</h2>
+  <p id="user"></p>
+
+  <!-- TEXT -->
+  <div class="box">
+    <h4>1️⃣ Describe a challenge you faced in a project</h4>
+    <textarea id="text"></textarea><br>
+    <button id="textBtn" onclick="submitText()">Submit Text</button>
+    <div id="textStatus" class="status"></div>
+    <div id="textResult" class="result"></div>
+  </div>
+
+  <!-- IMAGE -->
+  <div class="box">
+    <h4>2️⃣ Upload an image related to your project</h4>
+    <input type="file" id="img"><br>
+    <button id="imgBtn" onclick="submitImage()">Submit Image</button>
+    <div id="imgStatus" class="status"></div>
+    <div id="imgResult" class="result"></div>
+  </div>
+
+  <!-- AUDIO -->
+  <div class="box">
+    <h4>3️⃣ Upload a voice explanation (audio)</h4>
+    <input type="file" id="audio"><br>
+    <button id="audioBtn" onclick="submitAudio()">Submit Audio</button>
+    <div id="audioStatus" class="status"></div>
+    <div id="audioResult" class="result"></div>
+  </div>
+
+  <!-- VIDEO -->
+  <div class="box">
+    <h4>4️⃣ Upload a short video introduction</h4>
+    <input type="file" id="video"><br>
+    <button id="videoBtn" onclick="submitVideo()">Submit Video</button>
+    <div id="videoStatus" class="status"></div>
+    <div id="videoResult" class="result"></div>
+  </div>
+
+  <center>
+    <button id="finalBtn" disabled onclick="finalSubmit()">Final Submit</button>
+  </center>
+</div>
+
+<script>
+// ===== READ FROM LOGIN STORAGE =====
+const user_id = localStorage.getItem("user_id");
+const email = localStorage.getItem("email");
+const testStart = localStorage.getItem("test_start");
+const testEnd = localStorage.getItem("test_end");
+const pinValidated = localStorage.getItem("pin_validated");
+
+if(!user_id || pinValidated !== "true"){
+  window.location.href = "index.html";
+}
+
+document.getElementById("user").innerText = "Candidate: " + email;
+
+// ===== GLOBAL STATE =====
+let uploaded = { text:false, image:false, audio:false, video:false };
+let timeOver = false;
+
+// ===== STRICT TIME CHECK (BULLETPROOF) =====
+function isWithinTime(){
+  if(!testStart || !testEnd){
+    console.error("❌ testStart or testEnd missing in localStorage");
+    return false;
+  }
+
+  const now = new Date();
+  const start = new Date(testStart.replace(" ","T"));
+  const end   = new Date(testEnd.replace(" ","T"));
+
+  if(isNaN(start.getTime()) || isNaN(end.getTime())){
+    console.error("❌ Invalid date format:", testStart, testEnd);
+    return false;
+  }
+
+  return (now >= start && now <= end);
+}
+
+// ===== COUNTDOWN TIMER (STICKY + SAFE) =====
+function startCountdown(){
+  if(!testEnd){
+    console.error("❌ testEnd missing in localStorage");
+    return;
+  }
+
+  const end = new Date(testEnd.replace(" ","T"));
+  if(isNaN(end.getTime())){
+    console.error("❌ Invalid testEnd format:", testEnd);
+    return;
+  }
+
+  const x = setInterval(() => {
+    const now = new Date();
+    const diff = end - now;
+
+    if(diff <= 0){
+      clearInterval(x);
+      timeOver = true;
+      lockAll();
+      window.location.href = "timeover.html";
+      return;
+    }
+
+    const m = Math.floor(diff / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    document.getElementById("countdown").innerText = `${m}m ${s}s`;
+
+    updateFinalSubmit();
+  }, 1000);
+}
+
+// ===== FINAL SUBMIT ENABLE LOGIC =====
+function updateFinalSubmit(){
+  const allUploaded =
+    uploaded.text &&
+    uploaded.image &&
+    uploaded.audio &&
+    uploaded.video;
+
+  if(!timeOver && isWithinTime() && allUploaded && pinValidated === "true"){
+    document.getElementById("finalBtn").disabled = false;
+  } else {
+    document.getElementById("finalBtn").disabled = true;
+  }
+}
+
+// ===== FREEZE AFTER SUBMIT =====
+function freeze(inputId, btnId, statusId){
+  document.getElementById(inputId).disabled = true;
+  document.getElementById(btnId).disabled = true;
+  document.getElementById(statusId).innerText = "Submitted ✅";
+  updateFinalSubmit();
+}
+
+function lockAll(){
+  ["text","img","audio","video"].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.disabled = true;
+  });
+  ["textBtn","imgBtn","audioBtn","videoBtn","finalBtn"].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.disabled = true;
+  });
+}
+
+/* ===== STEP-3 FIX ===== */
+function loadSubmissionState(){
+  fetch("http://127.0.0.1:5000/submission-status/" + user_id)
+    .then(r => r.json())
+    .then(d => {
+      if(d.error) return;
+
+      uploaded.text  = d.text;
+      uploaded.image = d.image;
+      uploaded.audio = d.audio;
+      uploaded.video = d.video;
+
+      if(d.text)  freeze("text","textBtn","textStatus");
+      if(d.image) freeze("img","imgBtn","imgStatus");
+      if(d.audio) freeze("audio","audioBtn","audioStatus");
+      if(d.video) freeze("video","videoBtn","videoStatus");
+
+      updateFinalSubmit();
+    });
+}
+
+// ===== SUBMIT TEXT =====
+function submitText(){
+  if(!isWithinTime()){ window.location.href="timeover.html"; return; }
+
+  fetch("http://127.0.0.1:5000/submit-text-answer",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json"},
+    body:JSON.stringify({
+      user_id:user_id,
+      question:"Describe a challenge you faced in a project.",
+      answer:document.getElementById("text").value
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if(d.error){ alert(d.error); window.location.href="timeover.html"; return; }
+
+    document.getElementById("textResult").innerText = d.ai_result;
+    document.getElementById("textResult").style.display = "block";
+
+    uploaded.text = true;
+    freeze("text","textBtn","textStatus");
+  });
+}
+
+// ===== SUBMIT IMAGE =====
+function submitImage(){
+  if(!isWithinTime()){ window.location.href="timeover.html"; return; }
+
+  let f=document.getElementById("img").files[0];
+  if(!f){ alert("Please choose a file"); return; }
+
+  let fd=new FormData();
+  fd.append("file",f);
+  fd.append("user_id",user_id);
+  fd.append("question","Upload an image related to your project");
+
+  fetch("http://127.0.0.1:5000/submit-image-answer",{
+    method:"POST",
+    body:fd
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.error){ alert(d.error); return; }
+
+    document.getElementById("imgResult").innerText=d.ai_result;
+    document.getElementById("imgResult").style.display="block";
+
+    uploaded.image = true;
+    freeze("img","imgBtn","imgStatus");
+  });
+}
+
+// ===== SUBMIT AUDIO =====
+function submitAudio(){
+  if(!isWithinTime()){ window.location.href="timeover.html"; return; }
+
+  let f = document.getElementById("audio").files[0];
+  if(!f){ alert("Please choose a file"); return; }
+
+  let fd = new FormData();
+  fd.append("file", f);
+  fd.append("user_id", user_id);
+  fd.append("question", "Explain your project verbally");
+
+  fetch("http://127.0.0.1:5000/submit-audio-answer",{
+    method:"POST",
+    body: fd
+  })
+  .then(r => r.json())
+  .then(d => {
+    if(d.error){ alert(d.error); return; }
+
+    document.getElementById("audioResult").innerText = d.ai_result;
+    document.getElementById("audioResult").style.display = "block";
+
+    uploaded.audio = true;
+    freeze("audio","audioBtn","audioStatus");
+  });
+}
+
+// ===== SUBMIT VIDEO =====
+function submitVideo(){
+  if(!isWithinTime()){ window.location.href="timeover.html"; return; }
+
+  let f = document.getElementById("video").files[0];
+  if(!f){ alert("Please choose a file"); return; }
+
+  let fd = new FormData();
+  fd.append("file", f);
+  fd.append("user_id", user_id);
+  fd.append("question", "Video introduction explaining your project");
+
+  fetch("http://127.0.0.1:5000/submit-video-answer",{
+    method: "POST",
+    body: fd
+  })
+  .then(r => r.json())
+  .then(d => {
+    if(d.error){ alert(d.error); return; }
+
+    document.getElementById("videoResult").innerText = d.ai_result;
+    document.getElementById("videoResult").style.display = "block";
+
+    uploaded.video = true;
+    freeze("video","videoBtn","videoStatus");
+  });
+}
+
+// ===== FINAL SUBMIT =====
+function finalSubmit(){
+  if(!isWithinTime()){ window.location.href="timeover.html"; return; }
+
+  fetch("http://127.0.0.1:5000/mark-submitted", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ user_id: user_id })
+  })
+  .then(r => r.json())
+  .then(d => {
+    lockAll();
+    window.location.href = "completed.html";
+  });
+}
+
+// ===== DEBUG (TEMP – REMOVE AFTER TEST) =====
+setInterval(() => {
+  console.log("DEBUG STATE ↓");
+  console.log("uploaded =", uploaded);
+  console.log("pinValidated =", pinValidated);
+  console.log("testStart =", testStart);
+  console.log("testEnd =", testEnd);
+  console.log("withinTime =", isWithinTime());
+}, 3000);
+
+
+loadSubmissionState();
+startCountdown();
+</script>
+
+</body>
+</html>

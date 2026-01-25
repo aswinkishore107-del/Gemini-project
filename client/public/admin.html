@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Owner Dashboard</title>
+  <style>
+    body{font-family:Arial;padding:30px;background:#f4f6fb}
+    .user{background:white;padding:15px;margin-bottom:20px;border-radius:8px}
+    .box{background:#eef3ff;padding:10px;margin-top:10px;white-space:pre-wrap}
+    button{margin-top:10px;padding:6px 12px}
+    .loading{color:#555;font-style:italic}
+    .error{color:red;font-weight:bold}
+  </style>
+</head>
+<body>
+
+<h2>Owner Dashboard – All Candidate Analysis</h2>
+
+<div id="users">
+  <p class="loading">Loading candidates...</p>
+</div>
+
+<script>
+if(localStorage.getItem("admin") !== "true"){
+  window.location.href = "admin_login.html";
+}
+
+// 🔁 Fetch all results (no cache)
+fetch("http://127.0.0.1:5000/admin/all-results", {
+  cache: "no-store"
+})
+  .then(r => r.json())
+  .then(data => {
+    let container = document.getElementById("users");
+    container.innerHTML = "";
+
+    if(Object.keys(data).length === 0){
+      container.innerHTML = "<p class='loading'>No candidates found.</p>";
+      return;
+    }
+
+    for(let user_id in data){
+      let user = data[user_id];
+
+      let div = document.createElement("div");
+      div.className = "user";
+
+      let html = `
+        <h3>${user.email}</h3>
+        <p><b>Status:</b> ${user.status}</p>
+        <p><b>Test Start:</b> ${user.test_start}</p>
+        <p><b>Test End:</b> ${user.test_end}</p>
+      `;
+
+      if(user.answers.length === 0){
+        html += `<p class="loading">No answers submitted.</p>`;
+      } else {
+        user.answers.forEach((a, i) => {
+          html += `
+            <p><b>Q${i+1}:</b> ${a.question}</p>
+            <p><b>Answer:</b> ${a.answer}</p>
+            <div class="box"><b>AI Result:</b><br>${a.ai_result}</div>
+            <hr>
+          `;
+        });
+      }
+
+      html += `
+        <button id="btn_${user_id}" onclick="getFinal(${user_id})">
+          Generate Final Verdict
+        </button>
+        <div class="box" id="final_${user_id}"></div>
+      `;
+
+      div.innerHTML = html;
+      container.appendChild(div);
+    }
+  })
+  .catch(err => {
+    document.getElementById("users").innerHTML =
+      "<p class='error'>Failed to load candidates.</p>";
+    console.error("ADMIN LOAD ERROR:", err);
+  });
+
+// 🧠 Final verdict fetch
+function getFinal(user_id){
+  const btn = document.getElementById("btn_" + user_id);
+  const box = document.getElementById("final_" + user_id);
+
+  btn.disabled = true;
+  btn.innerText = "Generating verdict...";
+
+  fetch("http://127.0.0.1:5000/admin/final-verdict/" + user_id, {
+    cache: "no-store"
+  })
+    .then(r => r.json())
+    .then(d => {
+      box.innerText = d.final_verdict || "No verdict returned.";
+      btn.innerText = "Verdict Generated";
+    })
+    .catch(err => {
+      box.innerText = "❌ Failed to generate verdict.";
+      btn.disabled = false;
+      btn.innerText = "Generate Final Verdict";
+      console.error("VERDICT ERROR:", err);
+    });
+}
+</script>
+
+</body>
+</html>
