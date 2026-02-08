@@ -1,45 +1,198 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Hiring Test Login</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Hiring Assessment Login</title>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+/* ===== RESET ===== */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
+/* ===== BODY ===== */
+body{
+  min-height:100vh;
+  background:linear-gradient(135deg,#0f172a,#1e293b);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#f8fafc;
+}
+
+/* ===== LOGIN CARD ===== */
+.login-box{
+  width:100%;
+  max-width:420px;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(15px);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:15px;
+  padding:35px 30px;
+  box-shadow:0 15px 35px rgba(0,0,0,0.4);
+  text-align:center;
+}
+
+/* ===== TITLE ===== */
+.login-box h2{
+  margin-bottom:10px;
+  font-weight:600;
+}
+
+.login-box p{
+  opacity:0.8;
+  font-size:14px;
+  margin-bottom:25px;
+}
+
+/* ===== INPUT ===== */
+input{
+  width:100%;
+  padding:12px 14px;
+  background:#020617;
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px;
+  color:white;
+  margin-bottom:20px;
+  font-size:14px;
+}
+
+input:focus{
+  outline:none;
+  border-color:#3b82f6;
+}
+
+/* ===== BUTTON ===== */
+button{
+  width:100%;
+  padding:12px;
+  background:linear-gradient(135deg,#2563eb,#3b82f6);
+  border:none;
+  border-radius:8px;
+  color:white;
+  font-size:15px;
+  font-weight:500;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.03);
+  background:linear-gradient(135deg,#1d4ed8,#2563eb);
+}
+
+/* ===== MESSAGE ===== */
+#msg{
+  margin-top:15px;
+  font-size:14px;
+  color:#ef4444;
+}
+
+/* ===== FOOTER TEXT ===== */
+.footer{
+  margin-top:25px;
+  font-size:12px;
+  opacity:0.6;
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:500px){
+
+  .login-box{
+    margin:20px;
+    padding:25px;
+  }
+
+}
+
+</style>
 </head>
+
 <body>
 
-<h2>Enter Test PIN</h2>
+<div class="login-box">
 
-<input type="text" id="pin">
-<button onclick="login()">Validate PIN</button>
-<p id="msg" style="color:red;"></p>
+  <h2>Hiring Assessment</h2>
+  <p>Enter your secure test PIN to continue</p>
+
+  <input type="text" id="pin" placeholder="Enter Test PIN">
+
+  <button onclick="login()">Validate PIN</button>
+
+  <p id="msg"></p>
+
+  <div class="footer">
+    © 2026 Hiring System • Secure Login
+  </div>
+
+</div>
+
 
 <script>
+
 function login(){
+
+  const pin = document.getElementById("pin").value.trim();
+
+  if(pin === ""){
+    document.getElementById("msg").innerText = "⚠️ Please enter PIN";
+    return;
+  }
+
   fetch("http://127.0.0.1:5000/validate-pin",{
+
     method:"POST",
-    headers:{ "Content-Type":"application/json"},
-    body:JSON.stringify({ pin: document.getElementById("pin").value })
+
+    headers:{
+      "Content-Type":"application/json"
+    },
+
+    body:JSON.stringify({ pin })
+
   })
-  .then(r=>r.json())
-  .then(d=>{
+
+  .then(r => r.json())
+
+  .then(d => {
+
     if(d.success){
 
-      // 🔴 STORE ALL IMPORTANT DATA
+      // STORE DATA
       localStorage.setItem("user_id", d.user_id);
       localStorage.setItem("email", d.email);
-      localStorage.setItem("test_start", d.test_start); // ⭐ ADD THIS
-      localStorage.setItem("test_end", d.test_end);     // already ok
-      localStorage.setItem("pin_validated", "true");   // ⭐ ADD THIS
+      localStorage.setItem("test_start", d.test_start);
+      localStorage.setItem("test_end", d.test_end);
+      localStorage.setItem("pin_validated", "true");
 
-      // Redirect to test page
+      // Redirect
       window.location.href = "test.html";
 
     }else{
-      document.getElementById("msg").innerText = d.message;
+
+      document.getElementById("msg").innerText = "❌ " + d.message;
+
     }
+
   })
-  .catch(err=>{
-    document.getElementById("msg").innerText = "Server error. Try again.";
+
+  .catch(err => {
+
+    document.getElementById("msg").innerText =
+      "⚠️ Server error. Try again later.";
+
   });
+
 }
+
 </script>
 
 </body>

@@ -1,68 +1,259 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Hiring Assessment</title>
-  <style>
-    body{font-family:Arial;margin:0;background:#f4f6fb}
-    #timerBar{position:sticky;top:0;background:#1f2937;color:white;padding:12px 20px;font-size:18px;font-weight:bold;display:flex;justify-content:center;z-index:1000}
-    .container{max-width:900px;margin:30px auto;padding:20px}
-    .box{background:white;padding:20px;margin-bottom:30px;border-radius:8px}
-    textarea{width:100%;height:120px}
-    .result{background:#eef3ff;padding:10px;margin-top:10px;display:none;white-space:pre-wrap}
-    .status{margin-top:8px;font-weight:bold}
-    button{padding:8px 16px;margin-top:10px}
-    #finalBtn{padding:12px 30px;font-size:16px;background:#2563eb;color:white;border:none;border-radius:6px;cursor:pointer}
-    #finalBtn:disabled{background:#9ca3af;cursor:not-allowed}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Hiring Assessment</title>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
+/* ===== BODY ===== */
+body{
+  background:linear-gradient(135deg,#0f172a,#1e293b);
+  color:#f8fafc;
+  min-height:100vh;
+}
+
+/* ===== HEADER TIMER ===== */
+#timerBar{
+  position:sticky;
+  top:0;
+  background:rgba(15,23,42,0.95);
+  backdrop-filter:blur(10px);
+  padding:15px;
+  text-align:center;
+  font-size:18px;
+  font-weight:600;
+  border-bottom:1px solid rgba(255,255,255,0.1);
+  z-index:1000;
+}
+
+/* ===== MAIN CONTAINER ===== */
+.container{
+  max-width:1000px;
+  margin:40px auto;
+  padding:20px;
+}
+
+/* ===== TITLE ===== */
+h2{
+  text-align:center;
+  margin-bottom:10px;
+  font-weight:600;
+}
+
+#user{
+  text-align:center;
+  opacity:0.8;
+  margin-bottom:40px;
+}
+
+/* ===== CARD BOX ===== */
+.box{
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(15px);
+  border-radius:15px;
+  padding:25px;
+  margin-bottom:30px;
+  border:1px solid rgba(255,255,255,0.1);
+  box-shadow:0 10px 25px rgba(0,0,0,0.3);
+  transition:0.3s;
+}
+
+.box:hover{
+  transform:translateY(-3px);
+}
+
+/* ===== HEADINGS ===== */
+.box h4{
+  margin-bottom:15px;
+  font-weight:500;
+}
+
+/* ===== INPUTS ===== */
+textarea,
+input[type="file"]{
+  width:100%;
+  padding:12px;
+  background:#020617;
+  color:white;
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px;
+  margin-top:5px;
+}
+
+textarea{
+  height:120px;
+  resize:none;
+}
+
+textarea:focus,
+input:focus{
+  outline:none;
+  border-color:#3b82f6;
+}
+
+/* ===== BUTTONS ===== */
+button{
+  margin-top:15px;
+  padding:10px 22px;
+  background:#2563eb;
+  border:none;
+  color:white;
+  border-radius:8px;
+  font-size:14px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  background:#1d4ed8;
+  transform:scale(1.05);
+}
+
+button:disabled{
+  background:#64748b;
+  cursor:not-allowed;
+  transform:none;
+}
+
+/* ===== RESULT BOX ===== */
+.result{
+  margin-top:15px;
+  padding:12px;
+  background:rgba(59,130,246,0.15);
+  border-left:4px solid #3b82f6;
+  border-radius:6px;
+  display:none;
+  white-space:pre-wrap;
+  font-size:14px;
+}
+
+/* ===== STATUS ===== */
+.status{
+  margin-top:8px;
+  color:#22c55e;
+  font-weight:500;
+}
+
+/* ===== FINAL BUTTON ===== */
+#finalBtn{
+  margin-top:20px;
+  padding:14px 40px;
+  font-size:16px;
+  background:linear-gradient(135deg,#2563eb,#3b82f6);
+  border-radius:30px;
+  font-weight:500;
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+
+  .container{
+    margin:20px;
+  }
+
+  h2{
+    font-size:22px;
+  }
+
+}
+
+</style>
 </head>
+
 <body>
 
-<div id="timerBar">Remaining Time: <span id="countdown">--:--</span></div>
+<!-- TIMER -->
+<div id="timerBar">
+  ⏳ Remaining Time : <span id="countdown">--:--</span>
+</div>
 
 <div class="container">
-  <h2>Hiring Assessment</h2>
+
+  <h2>Hiring Assessment Portal</h2>
   <p id="user"></p>
 
   <!-- TEXT -->
   <div class="box">
+
     <h4>1️⃣ Describe a challenge you faced in a project</h4>
-    <textarea id="text"></textarea><br>
-    <button id="textBtn" onclick="submitText()">Submit Text</button>
+
+    <textarea id="text" placeholder="Type your answer here..."></textarea>
+
+    <button id="textBtn" onclick="submitText()">Submit Answer</button>
+
     <div id="textStatus" class="status"></div>
     <div id="textResult" class="result"></div>
+
   </div>
+
 
   <!-- IMAGE -->
   <div class="box">
+
     <h4>2️⃣ Upload an image related to your project</h4>
-    <input type="file" id="img"><br>
-    <button id="imgBtn" onclick="submitImage()">Submit Image</button>
+
+    <input type="file" id="img">
+
+    <button id="imgBtn" onclick="submitImage()">Upload Image</button>
+
     <div id="imgStatus" class="status"></div>
     <div id="imgResult" class="result"></div>
+
   </div>
+
 
   <!-- AUDIO -->
   <div class="box">
-    <h4>3️⃣ Upload a voice explanation (audio)</h4>
-    <input type="file" id="audio"><br>
-    <button id="audioBtn" onclick="submitAudio()">Submit Audio</button>
+
+    <h4>3️⃣ Upload voice explanation</h4>
+
+    <input type="file" id="audio">
+
+    <button id="audioBtn" onclick="submitAudio()">Upload Audio</button>
+
     <div id="audioStatus" class="status"></div>
     <div id="audioResult" class="result"></div>
+
   </div>
+
 
   <!-- VIDEO -->
   <div class="box">
-    <h4>4️⃣ Upload a short video introduction</h4>
-    <input type="file" id="video"><br>
-    <button id="videoBtn" onclick="submitVideo()">Submit Video</button>
+
+    <h4>4️⃣ Upload video introduction</h4>
+
+    <input type="file" id="video">
+
+    <button id="videoBtn" onclick="submitVideo()">Upload Video</button>
+
     <div id="videoStatus" class="status"></div>
     <div id="videoResult" class="result"></div>
+
   </div>
 
+
+  <!-- FINAL -->
   <center>
-    <button id="finalBtn" disabled onclick="finalSubmit()">Final Submit</button>
+    <button id="finalBtn" disabled onclick="finalSubmit()">
+      ✅ Final Submit
+    </button>
   </center>
+
 </div>
+
 
 <script>
 // ===== READ FROM LOGIN STORAGE =====
